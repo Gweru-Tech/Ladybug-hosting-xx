@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Bot-Hosting.net</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .status-running {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-robot text-purple-500 text-2xl"></i>
+                    <span class="text-xl font-bold">Bot-Hosting.net</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="/" class="hover:text-purple-400 transition">Home</a>
+                    <a href="/panel" class="text-purple-400">Dashboard</a>
+                    <a href="#" onclick="showDocumentation()" class="hover:text-purple-400 transition">Documentation</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-400">Welcome, <%= user.username %></span>
+                    <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png" 
+                         class="w-10 h-10 rounded-full border-2 border-purple-500">
+                    <a href="/logout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition">
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-6 py-8">
+        <!-- Dashboard Header -->
+        <div class="gradient-bg rounded-xl p-8 mb-8 text-white">
+            <h1 class="text-4xl font-bold mb-4">Bot Dashboard</h1>
+            <p class="text-xl opacity-90">Manage your Discord bots with ease</p>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-75">Total Bots</p>
+                            <p class="text-2xl font-bold" id="total-bots">0</p>
+                        </div>
+                        <i class="fas fa-robot text-2xl opacity-75"></i>
+                    </div>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-75">Running</p>
+                            <p class="text-2xl font-bold text-green-300" id="running-bots">0</p>
+                        </div>
+                        <i class="fas fa-play-circle text-2xl opacity-75"></i>
+                    </div>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-75">Stopped</p>
+                            <p class="text-2xl font-bold text-red-300" id="stopped-bots">0</p>
+                        </div>
+                        <i class="fas fa-stop-circle text-2xl opacity-75"></i>
+                    </div>
+                </div>
+                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-75">CPU Usage</p>
+                            <p class="text-2xl font-bold">12%</p>
+                        </div>
+                        <i class="fas fa-microchip text-2xl opacity-75"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-4 mb-8">
+            <button onclick="showCreateBotModal()" 
+                    class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold transition flex items-center space-x-2">
+                <i class="fas fa-plus"></i>
+                <span>Create New Bot</span>
+            </button>
+            <button onclick="refreshBots()" 
+                    class="bg-gray-700 hover:bg-gray-600 px-6 py-3 rounded-lg font-semibold transition flex items-center space-x-2">
+                <i class="fas fa-sync"></i>
+                <span>Refresh</span>
+            </button>
+        </div>
+
+        <!-- Bots Grid -->
+        <div id="bots-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Bot cards will be dynamically inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="text-center py-16 hidden">
+            <i class="fas fa-robot text-6xl text-gray-600 mb-4"></i>
+            <h3 class="text-2xl font-semibold mb-2">No bots yet</h3>
+            <p class="text-gray-400 mb-6">Create your first bot to get started!</p>
+            <button onclick="showCreateBotModal()" 
+                    class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold transition">
+                Create Your First Bot
+            </button>
+        </div>
+    </div>
+
+    <!-- Create Bot Modal -->
+    <div id="create-bot-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4">
+            <h2 class="text-2xl font-bold mb-6">Create New Bot</h2>
+            <form id="create-bot-form">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Bot Name</label>
+                    <input type="text" id="bot-name" required
+                           class="w-full px-4 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                           placeholder="Enter bot name">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Description</label>
+                    <textarea id="bot-description" rows="3"
+                              class="w-full px-4 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              placeholder="Describe your bot"></textarea>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Runtime</label>
+                    <select id="bot-runtime" required
+                            class="w-full px-4 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500">
+                        <option value="nodejs">Node.js</option>
+                        <option value="python">Python</option>
+                        <option value="java">Java</option>
+                        <option value="deno">Deno</option>
+                        <option value="lua">Lua</option>
+                    </select>
+                </div>
+                <div class="flex space-x-4">
+                    <button type="submit" 
+                            class="flex-1 bg-purple-600 hover:bg-purple-700 py-2 rounded-lg font-semibold transition">
+                        Create Bot
+                    </button>
+                    <button type="button" onclick="hideCreateBotModal()" 
+                            class="flex-1 bg-gray-600 hover:bg-gray-700 py-2 rounded-lg font-semibold transition">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bot Details Modal -->
+    <div id="bot-details-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold" id="bot-details-title">Bot Details</h2>
+                <button onclick="hideBotDetailsModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="bot-details-content">
+                <!-- Bot details will be dynamically inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        let bots = [];
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadBots();
+        });
+
+        // Socket.IO event handlers
+        socket.on('bot-status', function(data) {
+            updateBotStatus(data.id, data.status);
+        });
+
+        socket.on('bot-created', function(bot) {
+            bots.unshift(bot);
+            renderBots();
+            updateStats();
+        });
+
+        // Load bots from API
+        async function loadBots() {
+            try {
+                const response = await fetch('/api/bots');
+                bots = await response.json();
+                renderBots();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading bots:', error);
+                showNotification('Error loading bots', 'error');
+            }
+        }
+
+        // Render bots
+        function renderBots() {
+            const container = document.getElementById('bots-container');
+            const emptyState = document.getElementById('empty-state');
+
+            if (bots.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            container.innerHTML = bots.map(bot => `
+                <div class="bg-gray-800 rounded-xl p-6 card-hover" data-bot-id="${bot.id}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2">${bot.name}</h3>
+                            <p class="text-gray-400 text-sm">${bot.description || 'No description'}</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full text-sm font-medium ${
+                            bot.status === 'running' 
+                                ? 'bg-green-900 text-green-300 status-running' 
+                                : 'bg-red-900 text-red-300'
+                        }">
+                            ${bot.status}
+                        </span>
+                    </div>
+                    <div class="mb-4">
+                        <span class="inline-flex items-center px-3 py-1 rounded-lg text-sm bg-gray-700">
+                            <i class="fab fa-${getRuntimeIcon(bot.runtime)} mr-2"></i>
+                            ${bot.runtime}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <button onclick="viewBotDetails(${bot.id})" 
+                                class="text-purple-400 hover:text-purple-300 transition">
+                            <i class="fas fa-cog mr-1"></i> Manage
+                        </button>
+                        <div class="flex space-x-2">
+                            <button onclick="toggleBot(${bot.id})" 
+                                    class="px-4 py-2 rounded-lg font-medium transition ${
+                                        bot.status === 'running'
+                                            ? 'bg-red-600 hover:bg-red-700'
+                                            : 'bg-green-600 hover:bg-green-700'
+                                    }">
+                                ${bot.status === 'running' ? 'Stop' : 'Start'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Subscribe to bot updates
+            bots.forEach(bot => {
+                socket.emit('subscribe-bot', bot.id);
+            });
+        }
+
+        // Update statistics
+        function updateStats() {
+            const totalBots = bots.length;
+            const runningBots = bots.filter(bot => bot.status === 'running').length;
+            const stoppedBots = bots.filter(bot => bot.status === 'stopped').length;
+
+            document.getElementById('total-bots').textContent = totalBots;
+            document.getElementById('running-bots').textContent = runningBots;
+            document.getElementById('stopped-bots').textContent = stoppedBots;
+        }
+
+        // Toggle bot status
+        async function toggleBot(botId) {
+            const bot = bots.find(b => b.id === botId);
+            const action = bot.status === 'running' ? 'stop' : 'start';
+
+            try {
+                const response = await fetch(`/api/bots/${botId}/${action}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const updatedBot = await response.json();
+                    const index = bots.findIndex(b => b.id === botId);
+                    bots[index] = updatedBot;
+                    renderBots();
+                    updateStats();
+                    showNotification(`Bot ${action}ed successfully`, 'success');
+                } else {
+                    showNotification(`Failed to ${action} bot`, 'error');
+                }
+            } catch (error) {
+                console.error(`Error ${action}ing bot:`, error);
+                showNotification(`Error ${action}ing bot`, 'error');
+            }
+        }
+
+        // Update bot status in UI
+        function updateBotStatus(botId, status) {
+            const bot = bots.find(b => b.id === botId);
+            if (bot) {
+                bot.status = status;
+                renderBots();
+                updateStats();
+            }
+        }
+
+        // View bot details
+        function viewBotDetails(botId) {
+            const bot = bots.find(b => b.id === botId);
+            if (!bot) return;
+
+            document.getElementById('bot-details-title').textContent = bot.name;
+            document.getElementById('bot-details-content').innerHTML = `
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Status</label>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                            bot.status === 'running' 
+                                ? 'bg-green-900 text-green-300' 
+                                : 'bg-red-900 text-red-300'
+                        }">
+                            <i class="fas fa-circle mr-2 text-xs"></i>
+                            ${bot.status}
+                        </span>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Runtime</label>
+                        <span class="inline-flex items-center px-3 py-1 rounded-lg bg-gray-700">
+                            <i class="fab fa-${getRuntimeIcon(bot.runtime)} mr-2"></i>
+                            ${bot.runtime}
+                        </span>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Description</label>
+                        <p class="text-gray-200">${bot.description || 'No description provided'}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Created</label>
+                        <p class="text-gray-200">${new Date(bot.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-2">Actions</label>
+                        <div class="flex space-x-4">
+                            <button onclick="toggleBot(${bot.id}); hideBotDetailsModal();" 
+                                    class="px-4 py-2 rounded-lg font-medium transition ${
+                                        bot.status === 'running'
+                                            ? 'bg-red-600 hover:bg-red-700'
+                                            : 'bg-green-600 hover:bg-green-700'
+                                    }">
+                                ${bot.status === 'running' ? 'Stop Bot' : 'Start Bot'}
+                            </button>
+                            <button onclick="editBotFiles(${bot.id})" 
+                                    class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-medium transition">
+                                Edit Files
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('bot-details-modal').classList.remove('hidden');
+        }
+
+        // Create bot modal functions
+        function showCreateBotModal() {
+            document.getElementById('create-bot-modal').classList.remove('hidden');
+        }
+
+        function hideCreateBotModal() {
+            document.getElementById('create-bot-modal').classList.add('hidden');
+            document.getElementById('create-bot-form').reset();
+        }
+
+        function hideBotDetailsModal() {
+            document.getElementById('bot-details-modal').classList.add('hidden');
+        }
+
+        // Create bot form submission
+        document.getElementById('create-bot-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const botData = {
+                name: document.getElementById('bot-name').value,
+                description: document.getElementById('bot-description').value,
+                runtime: document.getElementById('bot-runtime').value
+            };
+
+            try {
+                const response = await fetch('/api/bots', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(botData)
+                });
+
+                if (response.ok) {
+                    const newBot = await response.json();
+                    bots.unshift(newBot);
+                    renderBots();
+                    updateStats();
+                    hideCreateBotModal();
+                    showNotification('Bot created successfully!', 'success');
+                } else {
+                    showNotification('Failed to create bot', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating bot:', error);
+                showNotification('Error creating bot', 'error');
+            }
+        });
+
+        // Helper functions
+        function getRuntimeIcon(runtime) {
+            const icons = {
+                'nodejs': 'node-js',
+                'python': 'python',
+                'java': 'java',
+                'deno': 'code',
+                'lua': 'gem'
+            };
+            return icons[runtime] || 'code';
+        }
+
+        function refreshBots() {
+            loadBots();
+            showNotification('Bots refreshed', 'info');
+        }
+
+        function showDocumentation() {
+            window.open('https://wiki.bot-hosting.net', '_blank');
+        }
+
+        function editBotFiles(botId) {
+            showNotification('File editor coming soon!', 'info');
+            hideBotDetailsModal();
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 right-6 px-6 py-3 rounded-lg text-white font-medium z-50 ${
+                type === 'success' ? 'bg-green-600' :
+                type === 'error' ? 'bg-red-600' :
+                'bg-blue-600'
+            }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

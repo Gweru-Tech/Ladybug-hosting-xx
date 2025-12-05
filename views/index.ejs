@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot-Hosting.net | A Free Host For Discord Bots</title>
+    <meta name="description" content="Get your Discord bot online. We built a platform designed for hosting bots, with the goal of making deployment easy and cheap.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        .wave-animation {
+            animation: wave 3s ease-in-out infinite;
+        }
+        @keyframes wave {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .runtime-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <!-- Navigation -->
+    <nav class="bg-gray-800 shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-robot text-purple-500 text-2xl"></i>
+                    <span class="text-xl font-bold">Bot-Hosting.net</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#home" class="hover:text-purple-400 transition">Home</a>
+                    <a href="#features" class="hover:text-purple-400 transition">Features</a>
+                    <a href="#runtimes" class="hover:text-purple-400 transition">Runtimes</a>
+                    <a href="/panel" class="hover:text-purple-400 transition">Dashboard</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <% if (user) { %>
+                        <img src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png" 
+                             class="w-10 h-10 rounded-full border-2 border-purple-500">
+                        <a href="/logout" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition">
+                            Logout
+                        </a>
+                    <% } else { %>
+                        <a href="/auth/discord" class="bg-purple-600 hover:bg-purple-700 px-6 py-2 rounded-lg transition flex items-center space-x-2">
+                            <i class="fab fa-discord"></i>
+                            <span>Login with Discord</span>
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="gradient-bg py-20">
+        <div class="container mx-auto px-6 text-center">
+            <div class="mb-8 wave-animation">
+                <img src="https://bot-hosting.net/assets/img/robot.webp" 
+                     alt="Robot" class="w-32 h-32 mx-auto">
+            </div>
+            <h1 class="text-5xl md:text-6xl font-bold mb-6">
+                Get your Discord bot online.
+            </h1>
+            <p class="text-xl mb-8 max-w-3xl mx-auto">
+                We built a platform designed for hosting bots, with the goal of making deployment easy and cheap.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="/panel" class="bg-white text-purple-600 px-8 py-4 rounded-lg font-semibold hover-scale hover:bg-gray-100 transition">
+                    Get started for free
+                </a>
+                <a href="https://discord.gg/6FKKj4qEM6" target="_blank" 
+                   class="border-2 border-white px-8 py-4 rounded-lg font-semibold hover-scale hover:bg-white hover:text-purple-600 transition">
+                    Join Discord Server
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-gray-800">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-16">Why Choose Bot-Hosting.net?</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center hover-scale">
+                    <div class="bg-purple-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-rocket text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-semibold mb-4">Easy Deployment</h3>
+                    <p class="text-gray-400">
+                        Deploy your Discord bot in minutes with our streamlined interface and comprehensive documentation.
+                    </p>
+                </div>
+                <div class="text-center hover-scale">
+                    <div class="bg-green-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-dollar-sign text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-semibold mb-4">Completely Free</h3>
+                    <p class="text-gray-400">
+                        Start hosting your bots for free with generous resource limits and upgrade as you grow.
+                    </p>
+                </div>
+                <div class="text-center hover-scale">
+                    <div class="bg-blue-600 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-clock text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-semibold mb-4">24/7 Uptime</h3>
+                    <p class="text-gray-400">
+                        Keep your bots online 24/7 with our reliable infrastructure and automatic restart capabilities.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Supported Runtimes -->
+    <section id="runtimes" class="py-20 bg-gray-900">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl font-bold text-center mb-16">Supported Runtimes</h2>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-6 max-w-4xl mx-auto">
+                <div class="runtime-card rounded-lg p-6 text-center hover-scale">
+                    <i class="fab fa-node-js text-4xl text-green-500 mb-3"></i>
+                    <h4 class="font-semibold">Node.js</h4>
+                </div>
+                <div class="runtime-card rounded-lg p-6 text-center hover-scale">
+                    <i class="fab fa-python text-4xl text-blue-500 mb-3"></i>
+                    <h4 class="font-semibold">Python</h4>
+                </div>
+                <div class="runtime-card rounded-lg p-6 text-center hover-scale">
+                    <i class="fab fa-java text-4xl text-red-500 mb-3"></i>
+                    <h4 class="font-semibold">Java</h4>
+                </div>
+                <div class="runtime-card rounded-lg p-6 text-center hover-scale">
+                    <i class="fas fa-code text-4xl text-yellow-500 mb-3"></i>
+                    <h4 class="font-semibold">Deno</h4>
+                </div>
+                <div class="runtime-card rounded-lg p-6 text-center hover-scale">
+                    <i class="fas fa-gem text-4xl text-purple-500 mb-3"></i>
+                    <h4 class="font-semibold">Lua</h4>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Section -->
+    <section class="py-20 bg-gray-800">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-12">
+                <img src="https://bot-hosting.net/assets/img/wave.png" 
+                     alt="Wave" class="w-16 h-16 mx-auto mb-6">
+                <h2 class="text-4xl font-bold mb-4">Our services are trusted by thousands of users.</h2>
+            </div>
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <img src="https://bot-hosting.net/assets/img/cloud.png" 
+                         alt="Cloud" class="w-full max-w-md mx-auto">
+                </div>
+                <div>
+                    <p class="text-lg mb-6">
+                        Bot-Hosting.net has been successfully running since 2021 and we are proud to have helped thousands of users bring their bots online 24/7.
+                    </p>
+                    <p class="text-lg mb-6">
+                        We know hosting can be confusing, which is why we've tried to simplify the process with extensive guides in our docs. We hope we can help you too, why not give it a try ~ it's free!
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <a href="/panel" class="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg font-semibold transition">
+                            Get started
+                        </a>
+                        <a href="https://wiki.bot-hosting.net" target="_blank" 
+                           class="border-2 border-purple-600 hover:bg-purple-600 px-6 py-3 rounded-lg font-semibold transition">
+                            View Documentation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-700 py-12">
+        <div class="container mx-auto px-6">
+            <div class="grid md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Bot-Hosting.net</h3>
+                    <p class="text-gray-400">
+                        Have you ever wished for a free, good quality Discord bot host? If yes, Bot-Hosting.net is the host for you.
+                    </p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Links</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="/about" class="hover:text-white transition">About</a></li>
+                        <li><a href="https://wiki.bot-hosting.net" target="_blank" class="hover:text-white transition">Knowledgebase</a></li>
+                        <li><a href="/legal" class="hover:text-white transition">Terms & Conditions</a></li>
+                        <li><a href="/privacy" class="hover:text-white transition">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Community</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="https://discord.gg/6FKKj4qEM6" target="_blank" class="hover:text-white transition">Discord Server</a></li>
+                        <li><a href="https://advertise.bot-hosting.net" target="_blank" class="hover:text-white transition">Advertise</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Connect</h4>
+                    <div class="flex space-x-4">
+                        <a href="https://discord.gg/6FKKj4qEM6" target="_blank" 
+                           class="text-gray-400 hover:text-white transition text-2xl">
+                            <i class="fab fa-discord"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition text-2xl">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition text-2xl">
+                            <i class="fab fa-github"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                <p>&copy; Copyright 2023 Bot-Hosting.net. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Add scroll effect to navbar
+        window.addEventListener('scroll', function() {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 50) {
+                nav.classList.add('shadow-2xl');
+            } else {
+                nav.classList.remove('shadow-2xl');
+            }
+        });
+    </script>
+</body>
+</html>
